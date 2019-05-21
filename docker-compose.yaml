@@ -1,6 +1,19 @@
 version: "3.7"
 
 services:
+  dash:
+    image: dashpay/dashd
+    restart: always
+    expose:
+      - "9998"
+      - "9999"
+    ports:
+      - "19998:19998"
+      - "19999:19999"
+    volumes:
+      - ./config/dash.conf:/dash/.dashcore/dash.conf:ro
+      - dash-data:/dash/.dashcore
 
 volumes:
+  dash-data:
 

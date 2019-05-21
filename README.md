@@ -14,7 +14,7 @@ Currently available nodes:
 
   * [ ] Bitcoin
   * [ ] Bitcoin Cash
-  * [ ] Dash
+  * [X] Dash
   * [ ] Litecoin
   * [ ] Ethereum
   * [ ] Ripple
