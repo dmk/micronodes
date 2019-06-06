@@ -1,6 +1,47 @@
 version: "3.7"
-
 services:
+
+  cardano:
+    build:
+      context: ./images/cardano
+    ports:
+      #- "8080:8080"
+      #- "8080:8080"
+      #- "8080:8080"
+      #- "8080:8080"
+      #- "8080:8080"
+      - "8090:8090"
+      - "8091:8091"
+      - "8190:8190"
+    volumes:
+      #- ./config/cardano/configuration.yaml:/ada/configuration.yaml:ro
+      - cardano-data:/ada/data
+    command:
+      - "--address 0.0.0.0:3003"
+      - "--listen  0.0.0.0:3003"
+      - "--db-path /ada/data/db"
+      - "--web"
+      - "--web-port 8083"
+      - "--wallet-address 0.0.0.0:8093"
+      - "--wallet-db-path /ada/data/wallet-db"
+
+  cardano-explorer:
+    build:
+      context: ./images/cardano
+    ports:
+      #- "8080:8080"
+      #- "8080:8080"
+      #- "8080:8080"
+      #- "8080:8080"
+      - "8080:8080"
+      #- "8090:8090"
+      #- "8190:8190"
+    command:
+      - /cardano-sl/test-explorer
+    volumes:
+      # - ./config/cardano/configuration.yaml:/cardano-sl/lib/configuration.yaml:ro
+      - cardano-data:/ada
+
   dash:
     image: dashpay/dashd
     restart: always
@@ -15,5 +56,6 @@ services:
       - dash-data:/dash/.dashcore
 
 volumes:
+  cardano-data:
   dash-data:
 

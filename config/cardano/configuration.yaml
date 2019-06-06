@@ -1,0 +1,430 @@
+##############################################################################
+##                                                                          ##
+##   Development config                                                     ##
+##                                                                          ##
+##############################################################################
+
+dev: &dev
+
+  core: &dev_core
+
+    genesis: &dev_core_genesis
+      # To use a canonical JSON genesis, use the 'src' key instead of 'spec'.
+      # e. g.
+      # src:
+      #   file: genesis.json
+      #   hash: bcfbfcad6cf78f2363568e76af9d6e927f71c3683aafe5e289796579792dccdb
+      spec: &dev_core_genesis_spec
+        initializer:
+          testBalance:
+            poors:        12
+            richmen:      4
+            richmenShare: 0.99
+            useHDAddresses: True
+            totalBalance: 600000000000000000
+          fakeAvvmBalance:
+            count: 10
+            oneBalance: 100000
+          avvmBalanceFactor: 1
+          useHeavyDlg: True  # it's better to use heavy delegation to test it more often
+          seed: 0
+        blockVersionData: &dev_core_genesis_spec_blockVersionData
+          scriptVersion:     0
+          slotDuration:      7000
+          maxBlockSize:      2000000
+          maxHeaderSize:     2000000
+          maxTxSize:         4096 # 4 Kb
+          maxProposalSize:   700 # 700 bytes
+          mpcThd:            0.01 # 1% of stake
+          heavyDelThd:       0.005 # 0.5% of stake
+          updateVoteThd:     0.001 # 0.1% of total stake
+          updateProposalThd: 0.1 # 10% of total stake
+          updateImplicit:    10 # slots
+          softforkRule:
+            initThd:        0.9 # 90% of total stake
+            minThd:         0.6 # 60% of total stake
+            thdDecrement:   0.05 # 5% of total stake
+          txFeePolicy:
+            txSizeLinear:
+              a: 155381 # absolute minimal fees per transaction
+              b: 43.946 # additional minimal fees per byte of transaction size
+          unlockStakeEpoch: 18446744073709551615 # last epoch (maxBound @Word64)
+        protocolConstants: &dev_core_genesis_spec_protocolConstants
+          k: 2
+          protocolMagic: 55550001
+          vssMinTTL: 2
+          vssMaxTTL: 6
+        ftsSeed: "c2tvdm9yb2RhIEdndXJkYSBib3JvZGEgcHJvdm9kYSA="
+        heavyDelegation: {}
+        avvmDistr: {}
+    requiresNetworkMagic: RequiresNoMagic
+    dbSerializeVersion: 0
+  txValidationRules:
+    attribResrictEpoch: 2
+    addrAttribSize: 128
+    txAttribSize: 128
+
+  ntp: &dev_ntp
+    # NTP
+    responseTimeout: 30000000 # 30 sec
+    pollDelay:  1800000000 # 30 min
+    servers:
+      - "0.pool.ntp.org"
+      - "2.pool.ntp.org"
+      - "3.pool.ntp.org"
+
+  update: &dev_update
+    applicationName: cardano-sl
+    applicationVersion: 0
+    lastKnownBlockVersion:
+      bvMajor: 0
+      bvMinor: 0
+      bvAlt: 0
+
+  ssc: &dev_ssc
+    mpcSendInterval: 10 # must be less than (2 * k * slotDuration - networkDiameter)
+    mdNoCommitmentsEpochThreshold: 3
+    noReportNoSecretsForEpoch1: False
+
+  txp: &dev_txp
+    memPoolLimitTx: 200 # mem pool will be limited to this many transactions
+    assetLockedSrcAddrs: []
+
+  dlg: &dev_dlg
+    dlgCacheParam: 500
+    messageCacheTimeout: 30
+
+  block: &dev_block
+    networkDiameter: 3
+    recoveryHeadersMessage: 20 # should be greater than k
+    streamWindow: 2048
+
+    # Chain quality thresholds and other constants to detect suspicious things
+    nonCriticalCQBootstrap: 0.95
+    criticalCQBootstrap: 0.8888
+    nonCriticalCQ: 0.8
+    criticalCQ: 0.654321
+    criticalForkThreshold: 2 # number of blocks such that if so many blocks are
+                             # rolled back, it requires immediate response
+    fixedTimeCQ: 10 # Chain quality will be also calculated for this amount
+                    # of seconds.
+
+  node: &dev_node
+    networkConnectionTimeout: 15000 # ms
+    conversationEstablishTimeout: 30000
+    blockRetrievalQueueSize: 100
+    pendingTxResubmissionPeriod: 7 # seconds
+    walletProductionApi: false
+    walletTxCreationDisabled: false
+    explorerExtendedApi: true
+
+  tls: &dev_tls
+    ca:
+      organization: "Input Output HK"
+      commonName: "Cardano SL Self-Signed Root CA"
+      expiryDays: 3650
+
+    server:
+      organization: "Input Output HK"
+      commonName: "Cardano SL Server Node"
+      expiryDays: 365
+      altDNS:
+        - "localhost"
+        - "localhost.localdomain"
+        - "127.0.0.1"
+        - "::1"
+
+    clients:
+      - organization: "Input Output HK"
+        commonName: "Daedalus Wallet"
+        expiryDays: 365
+
+  wallet: &dev_wallet
+    # Configuration options for throttling the API. Items at the top level
+    # apply as a default setting to all requests. A 'null' value indicates that
+    # throttling is disabled.  To enable throttling, change the null value for
+    # the keys that are commented out below.
+    throttle: null
+    # throttle:
+    # # Number of requests per throttling period.
+    #   rate: 200
+    #   # Amount of microseconds in a throttling period.
+    #   period: 1_000_000
+    #   # The burst rate of concurrent requests. This allows end users to
+    #   # temporarily exceed the request rate.
+    #   burst: 30
+
+# Default configuration is development.
+
+default: *dev
+
+
+##############################################################################
+##                                                                          ##
+##   Testnet config                                                         ##
+##                                                                          ##
+##############################################################################
+
+# Should be used to generate genesis
+testnet_launch: &testnet_launch
+  <<: *mainnet_base
+  core: &testnet_gen_core
+    <<: *mainnet_base_core
+    genesis: &testnet_gen_genesis
+      <<: *mainnet_base_genesis
+      spec: &testnet_gen_spec
+        <<: *mainnet_base_spec
+        protocolConstants:
+          k: 2160
+          protocolMagic: 1097911063
+          vssMinTTL: 2
+          vssMaxTTL: 6
+        avvmDistr: {}
+        initializer:
+          testBalance:
+            poors:        100
+            richmen:      7
+            richmenShare: 0.95
+            totalBalance: 42000000000000000 # 42e9 ADA
+            useHDAddresses: True
+          fakeAvvmBalance:
+            count: 100
+            oneBalance: 20000000000000 # 2e7 ADA
+          avvmBalanceFactor: 1
+          useHeavyDlg: True
+          seed: 0 # should be overridden using --configuration-seed
+        blockVersionData:
+          <<: *mainnet_base_blockVersionData
+          maxHeaderSize:      2000
+          maxProposalSize:   70000 # 70KB
+          maxTxSize:         65536 # 64KiB
+    requiresNetworkMagic: RequiresMagic
+  txValidationRules:
+    attribResrictEpoch: 2
+    addrAttribSize: 128
+    txAttribSize: 128
+
+testnet_full: &testnet_full
+  <<: *testnet_launch
+  core: &testnet_full_core
+    <<: *testnet_gen_core
+    genesis:
+      <<: *testnet_gen_genesis
+      src:
+        file: testnet-genesis.json
+        hash: b7f76950bc4866423538ab7764fc1c7020b24a5f717a5bee3109ff2796567214
+
+  update: &testnet_full_update
+    applicationName: cardano-sl
+    applicationVersion: 1
+    lastKnownBlockVersion:
+      bvMajor: 0
+      bvMinor: 1
+      bvAlt: 0
+
+testnet_wallet: &testnet_wallet
+  <<: *testnet_full
+  update: &testnet_wallet_update
+    applicationName: csl-daedalus
+    applicationVersion: 10
+    lastKnownBlockVersion:
+      bvMajor: 0
+      bvMinor: 0
+      bvAlt: 0
+
+testnet_wallet_linux64: &testnet_wallet_linux64
+  <<: *testnet_wallet
+
+##############################################################################
+##                                                                          ##
+##   Mainnet dryrun config sample                                           ##
+##                                                                          ##
+##############################################################################
+
+mainnet_dryrun_full: &mainnet_dryrun_full
+  <<: *mainnet_base
+  core:
+    <<: *mainnet_base_core
+    genesis:
+      src:
+        file: mainnet-genesis-dryrun-with-stakeholders.json
+        hash: c6a004d3d178f600cd8caa10abbebe1549bef878f0665aea2903472d5abf7323
+    requiresNetworkMagic: RequiresNoMagic
+  txValidationRules:
+    attribResrictEpoch: 2
+    addrAttribSize: 128
+    txAttribSize: 128
+
+mainnet_dryrun_wallet_linux64: &mainnet_dryrun_wallet_linux64
+  <<: *mainnet_dryrun_full
+  update:
+    applicationName: csl-daedalus
+    applicationVersion: 23
+    lastKnownBlockVersion:
+      bvMajor: 0
+      bvMinor: 2
+      bvAlt: 0
+
+##############################################################################
+##                                                                          ##
+##   Mainnet staging with short epoch                                       ##
+##                                                                          ##
+##############################################################################
+
+# This configuration should be modified before using it.
+# For more information see `docs/configuration.md` in master branch.
+mainnet_staging_short_epoch_full: &mainnet_staging_short_epoch_full
+  <<: *mainnet_base
+  core:
+    <<: *mainnet_base_core
+    genesis:
+      src:
+        file: mainnet-staging-short-epoch-genesis.json
+        hash: 82f274fb611a7637c8162ebd2a5b2b2852fa82e5230e206e87d4eac97aa96016
+  update:
+    applicationName: cardano-sl
+    applicationVersion: 0
+    lastKnownBlockVersion:
+      bvMajor: 0
+      bvMinor: 0
+      bvAlt: 0
+
+mainnet_staging_short_epoch_wallet_linux64:
+  <<: *mainnet_staging_short_epoch_full
+  update:
+    applicationName: csl-daedalus
+    applicationVersion: 0
+    lastKnownBlockVersion:
+      bvMajor: 0
+      bvMinor: 0
+      bvAlt: 0
+
+##############################################################################
+##                                                                          ##
+##   Devnet config                                                          ##
+##                                                                          ##
+##############################################################################
+
+devnet: &devnet
+  <<: *mainnet_base
+  core:
+    <<: *mainnet_base_core
+    genesis:
+      <<: *mainnet_base_genesis
+      spec:
+        <<: *mainnet_base_spec
+        blockVersionData:
+          <<: *mainnet_base_blockVersionData
+          slotDuration:      20000 # set to desired value
+          maxHeaderSize:      2000
+          maxProposalSize:   70000 # 70KB
+          maxTxSize:         65536 # 64KiB
+        protocolConstants:
+          <<: *mainnet_base_protocolConstants
+          protocolMagic: 170987650
+          k: 6 # set to desired value
+        avvmDistr: *mainnet_avvmDistr
+        initializer:
+          testBalance:
+            poors:        200 # should be enough for developers
+            richmen:      3   # this is the number of core nodes,
+                              # set to desired value
+            richmenShare: 0.96
+            totalBalance: 13887504355000000
+            # We need to use HD addresses, because Daedalus can import
+            # only them and some developers may want to test Daedalus.
+            useHDAddresses: True
+          fakeAvvmBalance:
+            count: 100
+            oneBalance: 15000000
+          avvmBalanceFactor: 1
+          useHeavyDlg: True
+          seed: 0
+    requiresNetworkMagic: RequiresNoMagic
+
+  update: &devnet_update
+    applicationName: cardano-sl
+    applicationVersion: 0
+    lastKnownBlockVersion:
+      bvMajor: 0
+      bvMinor: 0
+      bvAlt: 0
+    systemTag: none
+
+  node:
+    <<: *mainnet_base_node
+    networkDiameter: 18 # should be slightly less than slot duration
+    recoveryHeadersMessage: 200 # should be greater than k
+
+devnet_linux64:
+  <<: *devnet
+  update:
+    <<: *devnet_update
+    applicationName: csl-daedalus
+    applicationVersion: 0
+    lastKnownBlockVersion:
+      bvMajor: 0
+      bvMinor: 0
+      bvAlt: 0
+    systemTag: linux
+
+##############################################################################
+##                                                                          ##
+##   Internal staging configs                                               ##
+##                                                                          ##
+##############################################################################
+
+# Should be used to generate genesis
+internal_staging_gen: &internal_staging_gen
+  <<: *mainnet_base
+  core: &internal_staging_gen_core
+    <<: *mainnet_base_core
+    genesis:
+      <<: *mainnet_base_genesis
+      spec:
+        <<: *mainnet_base_spec
+        protocolConstants:
+          <<: *mainnet_base_protocolConstants
+          protocolMagic: 60926700
+        avvmDistr: *mainnet_avvmDistr
+        initializer:
+          testBalance:
+            poors:        12000
+            richmen:      7
+            richmenShare: 0.93
+            totalBalance: 13887504355000000
+            useHDAddresses: True
+          fakeAvvmBalance:
+            count: 100
+            oneBalance: 1000000000000 # 1e6 ADA
+          avvmBalanceFactor: 0.1
+          useHeavyDlg: True
+          seed: 0 # should be overridden using --configuration-seed
+
+# Full nodes
+internal_staging_full: &internal_staging_full
+  <<: *internal_staging_gen
+  core:
+    <<: *internal_staging_gen_core
+    genesis:
+      src:  # TODO: it doesn't exist yet
+        file: internal-staging-genesis.json
+        hash: f73231256fe6784c408e8a31b7bb8250f80ce64fdbdec137ad1da2faa257a166
+  update:
+    applicationName: cardano-sl
+    applicationVersion: 0
+    lastKnownBlockVersion:
+      bvMajor: 0
+      bvMinor: 0
+      bvAlt: 0
+    systemTag: none
+
+internal_staging_wallet_linux64:
+  <<: *internal_staging_full
+  update:
+    applicationName: csl-daedalus
+    applicationVersion: 0
+    lastKnownBlockVersion:
+      bvMajor: 0
+      bvMinor: 0
+      bvAlt: 0
